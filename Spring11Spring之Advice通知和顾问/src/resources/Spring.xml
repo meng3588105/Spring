@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+    <!--01.配置目标对象-->
+    <bean id="UserService" class="com.mmm.service.Impl.UserServiceImpl"/>
+
+    <!--02.配置前置通知-->
+    <bean id="before" class="com.mmm.service.advices.BeforeAdvice"/>
+
+    <!--03.配置后置通知-->
+    <bean id="after" class="com.mmm.service.advices.AfterAdvice"/>
+    <!--04.配置环绕通知-->
+    <bean id="around" class="com.mmm.service.advices.AroundAdvice"/>
+
+
+    <!--配置异常目标对象-->
+    <bean id="userException" class="com.mmm.service.exceptionPackage.UserServiceImpl"/>
+    <!--配置异常通知-->
+    <bean id="myException" class="com.mmm.service.advices.ExceptionAdvice"/>
+
+    <!--
+        03.通过配置工厂代理bean，生成代理类，来把通知织入到目标对象
+        问题：只能管理  通知！
+            001.只能将切面织入到目标类的所有方法中！
+            002.只能配置一个目标对象
+    -->
+    <bean id="userProxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+
+        <!--注册目标对象-->
+        <property name="targetName" value="UserService"/>
+        <!--注册通知-->
+        <!-- <property name="interceptorNames" value="userService"/>-->
+        <property name="interceptorNames">
+            <array>
+                <value>before</value><!--  前置通知-->
+                <value>after</value><!--  后置通知-->
+                <value>around</value><!--  环绕通知-->
+            </array>
+        </property>
+    </bean>
+
+
+    <!--现在是一个service对应一个ProxyFactoryBean  这样不可以！-->
+    <bean id="exceptionProxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+        <!--注册目标对象 -->
+        <property name="targetName" value="userException"/>
+        <!--注册通知-->
+        <property name="interceptorNames">
+            <array>
+                <value>myException</value> <!--异常通知-->
+            </array>
+        </property>
+        <!--代理类的优化  是否使用cglib动态代理-->
+        <property name="optimize" value="true"/>
+        <!-- <property name="proxyTargetClass" value="true"/>
+        proxyTargetClass：默认是false  ，默认执行jdk动态代理！
+                          设置成true，强制执行cglib！
+        optimize ：  代理类的优化
+                   有接口就是用jdk，没有接口使用cglib动态代理
+        -->
+    </bean>
+
+</beans>
